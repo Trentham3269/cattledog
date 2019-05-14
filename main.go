@@ -1,61 +1,53 @@
 package main
 
 import (
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
-	//"strconv"
 
+	"github.com/gorilla/mux"
+	"github.com/jinzhu/gorm"
 	"github.com/lib/pq"
 	"github.com/subosito/gotenv"
-	"github.com/gorilla/mux"
 )
 
 type Category struct {
-	ID	int	`json:id`
-	Name	string	`json:name`
+	ID		uint	`gorm:"primary_key" json:"id"`
+	Name	string	`gorm:"size:50" json:"name"` 
 }
 
-var categories []Category
+// Define database for global access
+var db *gorm.DB
 
-var db *sql.DB
-
+// Load environment variables
 func init() {
 	gotenv.Load()
 }
 
-func logFatal(err error) {
-	if err != nil {
-		log.Fatal(err)
-	}
-}
-
 func main() {
+	var err error
 	pgUrl, err := pq.ParseURL(os.Getenv("ELEPHANTSQL_URL"))
-	logFatal(err)
-
-	db, err = sql.Open("postgres", pgUrl)
-	logFatal(err)
-
-	err = db.Ping()
 	if err != nil {
-		log.Println("Could not connect to database")
-	} else {
-		log.Println("Connected to database successfully")
+		fmt.Println(err)
+	}
+
+	db, err = gorm.Open("postgres", pgUrl)
+	if err != nil {
+		fmt.Println(err)
 	}
 	defer db.Close()
 
+	// Create url routes
 	router := mux.NewRouter()
-
 	router.HandleFunc("/categories", getCategories).Methods("GET")
 	router.HandleFunc("/categories/{id}", getCategory).Methods("GET")
 	router.HandleFunc("/categories", addCategory).Methods("POST")
 	router.HandleFunc("/categories", updateCategory).Methods("PUT")
 	router.HandleFunc("/categories/{id}", deleteCategory).Methods("DELETE")
 
+	// Start http server
 	port := 8888
 	host := fmt.Sprintf("localhost:%d", port)
 	log.Println(fmt.Sprintf("Server listening on %d...", port))
@@ -63,35 +55,33 @@ func main() {
 }
 
 func getCategories(w http.ResponseWriter, r *http.Request) {
-	var category Category
-	categories = []Category{}
+	// Query db and return all categories
+	categories := []Category{}
+	db.Find(&categories)
 
-	rows, err := db.Query("select * from categories")
-	logFatal(err)
-	defer rows.Close()
-
-	for rows.Next() {
-		err := rows.Scan(&category.ID, &category.Name)
-		logFatal(err)
-
-		categories = append(categories, category)
-	}
-
+	// Log endpoint
+	log.Println("Return all categories")
+	
+	// Set header and encode as json
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(categories)
 }
 
 func getCategory(w http.ResponseWriter, r *http.Request) {
-	var category Category
-	params := mux.Vars(r)
+	// Access url parameter
+	vars := mux.Vars(r)
 
-	row := db.QueryRow("select * from categories where id=$1", params["id"])
+	// Query db and return category by id
+	category := Category{}
+	db.Where("ID = ?", vars["id"]).Find(&category)
 
-	err := row.Scan(&category.ID, &category.Name)
-	logFatal(err)
+	// Log category returned
+	log.Println(fmt.Sprintf("Return category of %s", category.Name))
 
+	// Set header and encode as json
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(category)
 }
-
 
 func addCategory(w http.ResponseWriter, r *http.Request) {
 
