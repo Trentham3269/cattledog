@@ -84,7 +84,10 @@ func getCategory(w http.ResponseWriter, r *http.Request) {
 }
 
 func addCategory(w http.ResponseWriter, r *http.Request) {
-
+	// Decode request and create record in db
+	category := Category{}
+	json.NewDecoder(r.Body).Decode(&category)
+	db.Create(&category)	
 }
 
 func updateCategory(w http.ResponseWriter, r *http.Request) {
