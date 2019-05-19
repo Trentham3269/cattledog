@@ -14,8 +14,8 @@ import (
 )
 
 type Category struct {
-	ID		uint	`gorm:"primary_key" json:"id"`
-	Name	string	`gorm:"size:50" json:"name"` 
+	ID      uint    `gorm:"primary_key" json:"id"`
+	Name    string  `gorm:"size:50" json:"name"` 
 }
 
 // Define database for global access
@@ -44,7 +44,7 @@ func main() {
 	router.HandleFunc("/categories", getCategories).Methods("GET")
 	router.HandleFunc("/categories/{id}", getCategory).Methods("GET")
 	router.HandleFunc("/categories", addCategory).Methods("POST")
-	router.HandleFunc("/categories", updateCategory).Methods("PUT")
+	router.HandleFunc("/categories/{id}", updateCategory).Methods("PUT")
 	router.HandleFunc("/categories/{id}", deleteCategory).Methods("DELETE")
 
 	// Start http server
@@ -87,13 +87,35 @@ func addCategory(w http.ResponseWriter, r *http.Request) {
 	// Decode request and create record in db
 	category := Category{}
 	json.NewDecoder(r.Body).Decode(&category)
-	db.Create(&category)	
+	db.Create(&category) 
+
+	// Log new category
+	log.Println(fmt.Sprintf("Create %s category", category.Name))	
 }
 
 func updateCategory(w http.ResponseWriter, r *http.Request) {
+    // Access url parameter
+	vars := mux.Vars(r)
 
+	// Find correct record and update details
+	category := Category{}
+	db.First(&category, vars["id"])
+	category.Name = "Archery" // TODO:accept input from client-side
+	db.Save(&category)
+
+	// Log category updated
+	log.Println(fmt.Sprintf("Update category to %s", category.Name))
 }
 
 func deleteCategory(w http.ResponseWriter, r *http.Request) {
+	// Access url parameter
+	vars := mux.Vars(r)
 
+	// Find correct record and delete from db
+	category := Category{}
+	db.First(&category, vars["id"])
+	db.Delete(&category)
+	
+	// Log category deleted
+	log.Println(fmt.Sprintf("Delete %s category", category.Name))
 }
