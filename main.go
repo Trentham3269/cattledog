@@ -69,7 +69,7 @@ func getCategory(w http.ResponseWriter, r *http.Request) {
 
 	// Query db and return category by id
 	category := models.Category{}
-	db.Where("ID = ?", vars["id"]).Find(&category)
+	db.Preload("Items").Where("ID = ?", vars["id"]).Find(&category)
 
 	// Log category returned
 	log.Println(fmt.Sprintf("Return category of %s", category.Name))
