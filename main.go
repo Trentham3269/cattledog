@@ -11,12 +11,8 @@ import (
 	"github.com/jinzhu/gorm"
 	"github.com/lib/pq"
 	"github.com/subosito/gotenv"
+	"github.com/Trentham3269/cattledog/models"
 )
-
-type Category struct {
-	ID      uint    `gorm:"primary_key" json:"id"`
-	Name    string  `gorm:"size:50" json:"name"` 
-}
 
 // Define database for global access
 var db *gorm.DB
@@ -56,7 +52,7 @@ func main() {
 
 func getCategories(w http.ResponseWriter, r *http.Request) {
 	// Query db and return all categories
-	categories := []Category{}
+	categories := []models.Category{}
 	db.Find(&categories)
 
 	// Log endpoint
@@ -72,7 +68,7 @@ func getCategory(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 
 	// Query db and return category by id
-	category := Category{}
+	category := models.Category{}
 	db.Where("ID = ?", vars["id"]).Find(&category)
 
 	// Log category returned
@@ -85,7 +81,7 @@ func getCategory(w http.ResponseWriter, r *http.Request) {
 
 func addCategory(w http.ResponseWriter, r *http.Request) {
 	// Decode request and create record in db
-	category := Category{}
+	category := models.Category{}
 	json.NewDecoder(r.Body).Decode(&category)
 	db.Create(&category) 
 
@@ -98,7 +94,7 @@ func updateCategory(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 
 	// Find correct record and update details
-	category := Category{}
+	category := models.Category{}
 	db.First(&category, vars["id"])
 	category.Name = "Archery" // TODO:accept input from client-side
 	db.Save(&category)
@@ -112,7 +108,7 @@ func deleteCategory(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 
 	// Find correct record and delete from db
-	category := Category{}
+	category := models.Category{}
 	db.First(&category, vars["id"])
 	db.Delete(&category)
 	
