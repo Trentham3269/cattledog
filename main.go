@@ -36,18 +36,18 @@ func main() {
 	defer db.Close()
 
 	// Create url routes
-	router := mux.NewRouter()
-	router.HandleFunc("/categories", getCategories).Methods("GET")
-	router.HandleFunc("/categories/{id}", getCategory).Methods("GET")
-	router.HandleFunc("/categories", addCategory).Methods("POST")
-	router.HandleFunc("/categories/{id}", updateCategory).Methods("PUT")
-	router.HandleFunc("/categories/{id}", deleteCategory).Methods("DELETE")
+	r := mux.NewRouter()
+	r.HandleFunc("/categories", getCategories).Methods("GET")
+	r.HandleFunc("/categories/{id}", getCategory).Methods("GET")
+	r.HandleFunc("/categories", addCategory).Methods("POST")
+	r.HandleFunc("/categories/{id}", updateCategory).Methods("PUT")
+	r.HandleFunc("/categories/{id}", deleteCategory).Methods("DELETE")
 
 	// Start http server
 	port := 8888
 	host := fmt.Sprintf("localhost:%d", port)
 	log.Println(fmt.Sprintf("Server listening on %d...", port))
-	log.Fatal(http.ListenAndServe(host, router))
+	log.Fatal(http.ListenAndServe(host, r))
 }
 
 func getCategories(w http.ResponseWriter, r *http.Request) {
