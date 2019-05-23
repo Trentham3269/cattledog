@@ -57,7 +57,7 @@ func getCategories(w http.ResponseWriter, r *http.Request) {
 
 	// Log endpoint
 	log.Println("Return all categories")
-	
+
 	// Set header and encode as json
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(categories)
@@ -69,7 +69,7 @@ func getCategory(w http.ResponseWriter, r *http.Request) {
 
 	// Query db and return category by id
 	category := models.Category{}
-	db.Preload("Items").Where("ID = ?", vars["id"]).Find(&category)
+	db.Preload("Items").Preload("Items.User").Where("ID = ?", vars["id"]).Find(&category)
 
 	// Log category returned
 	log.Println(fmt.Sprintf("Return category of %s", category.Name))
@@ -83,14 +83,14 @@ func addCategory(w http.ResponseWriter, r *http.Request) {
 	// Decode request and create record in db
 	category := models.Category{}
 	json.NewDecoder(r.Body).Decode(&category)
-	db.Create(&category) 
+	db.Create(&category)
 
 	// Log new category
-	log.Println(fmt.Sprintf("Create %s category", category.Name))	
+	log.Println(fmt.Sprintf("Create %s category", category.Name))
 }
 
 func updateCategory(w http.ResponseWriter, r *http.Request) {
-    // Access url parameter
+	// Access url parameter
 	vars := mux.Vars(r)
 
 	// Find correct record and update details
@@ -111,7 +111,7 @@ func deleteCategory(w http.ResponseWriter, r *http.Request) {
 	category := models.Category{}
 	db.First(&category, vars["id"])
 	db.Delete(&category)
-	
+
 	// Log category deleted
 	log.Println(fmt.Sprintf("Delete %s category", category.Name))
 }
