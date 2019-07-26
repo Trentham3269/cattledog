@@ -1,39 +1,39 @@
-package main
+	package main
 
 import (
 	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 
 	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
-	"github.com/lib/pq"
-	"github.com/subosito/gotenv"
 	"github.com/Trentham3269/cattledog/models"
+
+	_ "github.com/lib/pq"
 )
 
 // Define database for global access
 var db *gorm.DB
 
-// Load environment variables
-func init() {
-	gotenv.Load()
-}
+const (
+  host     = ""
+  port     = 
+  user     = ""
+  dbname   = ""
+)
 
 func main() {
 	var err error
-	pgUrl, err := pq.ParseURL(os.Getenv("ELEPHANTSQL_URL"))
-	if err != nil {
-		fmt.Println(err)
-	}
+	pgInfo := fmt.Sprintf("host=%s port=%d user=%s "+
+    "dbname=%s sslmode=disable",
+    host, port, user, dbname)
 
-	db, err = gorm.Open("postgres", pgUrl)
+	db, err = gorm.Open("postgres", pgInfo)
 	if err != nil {
 		fmt.Println(err)
 	}
-	defer db.Close()
+	defer db.Close()			
 
 	// Create url routes
 	r := mux.NewRouter()
@@ -60,7 +60,8 @@ func getCategories(w http.ResponseWriter, r *http.Request) {
 
 	// Set header and encode as json
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(categories)
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	json.NewEncoder(w).Encode(categories)	
 }
 
 func getCategory(w http.ResponseWriter, r *http.Request) {
@@ -69,13 +70,18 @@ func getCategory(w http.ResponseWriter, r *http.Request) {
 
 	// Query db and return category by id
 	category := models.Category{}
-	db.Preload("Items").Preload("Items.User").Where("ID = ?", vars["id"]).Find(&category)
+	db.
+		Preload("Items").
+		Preload("Items.User").
+		Where("ID = ?", vars["id"]).
+		Find(&category)
 
 	// Log category returned
 	log.Println(fmt.Sprintf("Return category of %s", category.Name))
 
 	// Set header and encode as json
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	json.NewEncoder(w).Encode(category)
 }
 
