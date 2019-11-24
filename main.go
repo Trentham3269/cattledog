@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
+	"github.com/joho/godotenv"
 	"github.com/Trentham3269/cattledog/models"
 
 	_ "github.com/lib/pq"
@@ -16,19 +18,27 @@ import (
 // Define database for global access
 var db *gorm.DB
 
-const (
-  host     = ""
-  port     = 
-  user     = ""
-  dbname   = ""
-)
-
 func main() {
 	var err error
-	pgInfo := fmt.Sprintf("host=%s port=%d user=%s "+
-    "dbname=%s sslmode=disable",
-    host, port, user, dbname)
 
+	// Load .env file
+	err = godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
+	// Assign environment variables
+	pg_host := os.Getenv("HOST")
+	pg_port := os.Getenv("PORT")
+	pg_user := os.Getenv("USERNAME")
+	pg_dbname := os.Getenv("DATABASE")
+
+	// Postgres connection string 
+	pgInfo := fmt.Sprintf("host=%s port=%s user=%s "+
+    "dbname=%s sslmode=disable",
+    pg_host, pg_port, pg_user, pg_dbname)
+
+    // Connect to database
 	db, err = gorm.Open("postgres", pgInfo)
 	if err != nil {
 		fmt.Println(err)
@@ -44,10 +54,10 @@ func main() {
 	r.HandleFunc("/categories/{id}", deleteCategory).Methods("DELETE")
 
 	// Start http server
-	port := 8888
-	host := fmt.Sprintf("localhost:%d", port)
-	log.Println(fmt.Sprintf("Server listening on %d...", port))
-	log.Fatal(http.ListenAndServe(host, r))
+	http_port := 8888
+	http_host := fmt.Sprintf("localhost:%d", http_port)
+	log.Println(fmt.Sprintf("Server listening on %d...", http_port))
+	log.Fatal(http.ListenAndServe(http_host, r))
 }
 
 func getCategories(w http.ResponseWriter, r *http.Request) {
