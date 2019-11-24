@@ -99,11 +99,13 @@ func updateCategory(w http.ResponseWriter, r *http.Request) {
 	// Access url parameter
 	vars := mux.Vars(r)
 
-	// Find correct record and update details
+	// Find correct record by id
 	category := models.Category{}
 	db.First(&category, vars["id"])
-	category.Name = "Archery" // TODO:accept input from client-side
-	db.Save(&category)
+	
+	// Parse request body
+	json.NewDecoder(r.Body).Decode(&category)
+	db.Save(&category.Name)
 
 	// Log category updated
 	log.Println(fmt.Sprintf("Update category to %s", category.Name))

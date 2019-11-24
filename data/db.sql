@@ -1,3 +1,8 @@
+/*
+To populate database:
+$ psql -d cattledog -f data/db.sql
+*/
+
 DROP TABLE IF EXISTS categories CASCADE;
 CREATE TABLE categories (  
   id SERIAL PRIMARY KEY,  
