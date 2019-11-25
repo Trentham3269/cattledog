@@ -11,6 +11,7 @@ import (
 	"github.com/jinzhu/gorm"
 	"github.com/joho/godotenv"
 	"github.com/Trentham3269/cattledog/models"
+	"golang.org/x/crypto/bcrypt"
 
 	_ "github.com/lib/pq"
 )
@@ -47,6 +48,7 @@ func main() {
 
 	// Create url routes
 	r := mux.NewRouter()
+	r.HandleFunc("/signup", createUser).Methods("POST")
 	r.HandleFunc("/categories", getCategories).Methods("GET")
 	r.HandleFunc("/categories/{id}", getCategory).Methods("GET")
 	r.HandleFunc("/categories", addCategory).Methods("POST")
@@ -58,6 +60,27 @@ func main() {
 	http_host := fmt.Sprintf("localhost:%d", http_port)
 	log.Println(fmt.Sprintf("Server listening on %d...", http_port))
 	log.Fatal(http.ListenAndServe(http_host, r))
+}
+
+func createUser(w http.ResponseWriter, r *http.Request) {
+	// Decode request to retrieve password
+	user := models.User{}
+	json.NewDecoder(r.Body).Decode(&user)
+
+	// Encrypt password
+	pass, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+	if err != nil {
+		log.Fatal("Password encryption failed")
+	}
+
+	// Assign new password
+	user.Password = string(pass)
+	
+	// Create user in db
+	db.Create(&user)
+
+	// Log user created
+	log.Println(fmt.Sprintf("Create user: %s", user.Email))
 }
 
 func getCategories(w http.ResponseWriter, r *http.Request) {

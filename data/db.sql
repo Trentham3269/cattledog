@@ -12,7 +12,8 @@ CREATE TABLE categories (
 DROP TABLE IF EXISTS users CASCADE;
 CREATE TABLE users (
   id SERIAL PRIMARY KEY,
-  email VARCHAR(80) UNIQUE NOT NULL 
+  email VARCHAR(80) UNIQUE NOT NULL, 
+  password VARCHAR(80) NOT NULL
 );
 
 DROP TABLE IF EXISTS items CASCADE;
@@ -34,8 +35,8 @@ INSERT INTO categories (name) VALUES ('Football');
 INSERT INTO categories (name) VALUES ('Surfing');
 INSERT INTO categories (name) VALUES ('Hockey');
 
-INSERT INTO users (email) VALUES ('testuser_one@gmail.com');
-INSERT INTO users (email) VALUES ('testuser_two@gmail.com');
+INSERT INTO users (email, password) VALUES ('testuser_one@gmail.com', 'testuser_one');
+INSERT INTO users (email, password) VALUES ('testuser_two@gmail.com', 'testuser_two');
 
 INSERT INTO items (title, description, cat_id, user_id) VALUES ('Boots', 'The latest in comfort, style and cost!', 1, 1);
 INSERT INTO items (title, description, cat_id, user_id) VALUES ('Indoor ball', 'As used in the NBA', 2, 1);
