@@ -8,9 +8,9 @@ import (
 	"os"
 
 	"github.com/gorilla/mux"
-	"github.com/gorilla/sessions"
 	"github.com/jinzhu/gorm"
 	"github.com/joho/godotenv"
+	"github.com/Trentham3269/cattledog/middleware"
 	"github.com/Trentham3269/cattledog/models"
 	"golang.org/x/crypto/bcrypt"
 
@@ -59,7 +59,7 @@ func main() {
 
 	// Auth routes
 	s := r.PathPrefix("/auth").Subrouter()
-	s.Use(sessionMiddleware)
+	s.Use(middleware.SessionMiddleware)
 	s.HandleFunc("/categories", addCategory).Methods("POST")
 	s.HandleFunc("/categories/{id}", updateCategory).Methods("PUT")
 	s.HandleFunc("/categories/{id}", deleteCategory).Methods("DELETE")
@@ -92,14 +92,8 @@ func createUser(w http.ResponseWriter, r *http.Request) {
 	log.Println(fmt.Sprintf("Create user: %s", user.Email))
 }
 
-// TODO: use Go's crypto/rand or securecookie.GenerateRandomKey(32) and persist the result
-var (
-	key = []byte("super-secret-key")
-	store = sessions.NewCookieStore(key)
-)
-
 func login(w http.ResponseWriter, r *http.Request) {
-	session, _ := store.Get(r, "cookie-name")
+	session, _ := middleware.Store.Get(r, "cookie-name")
 
 	// Decode request
 	user := models.User{}
@@ -139,7 +133,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 }
 
 func logout(w http.ResponseWriter, r *http.Request) {
-	session, _ := store.Get(r, "cookie-name")
+	session, _ := middleware.Store.Get(r, "cookie-name")
 
 	// Revoke users authentication
 	session.Values["authenticated"] = false
@@ -150,20 +144,6 @@ func logout(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	var resp = map[string]interface{}{"message": "User is now logged out"}
 	json.NewEncoder(w).Encode(resp)
-}
-
-func sessionMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-	// Get session cookie
-	session, _ := store.Get(r, "cookie-name")
-
-	// Check if user is authenticated
-	if auth, ok := session.Values["authenticated"].(bool); !ok || !auth {
-		http.Error(w, "Forbidden", http.StatusForbidden)
-		return
-	}
-	next.ServeHTTP(w, r)
-	})
 }
 
 func getCategories(w http.ResponseWriter, r *http.Request) {
