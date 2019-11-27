@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"github.com/gorilla/mux"
+	"github.com/gorilla/sessions"
 	"github.com/jinzhu/gorm"
 	"github.com/joho/godotenv"
 	"github.com/Trentham3269/cattledog/models"
@@ -49,6 +50,7 @@ func main() {
 	// Create url routes
 	r := mux.NewRouter()
 	r.HandleFunc("/signup", createUser).Methods("POST")
+	r.HandleFunc("/login", login).Methods("POST")
 	r.HandleFunc("/categories", getCategories).Methods("GET")
 	r.HandleFunc("/categories/{id}", getCategory).Methods("GET")
 	r.HandleFunc("/categories", addCategory).Methods("POST")
@@ -83,6 +85,52 @@ func createUser(w http.ResponseWriter, r *http.Request) {
 	log.Println(fmt.Sprintf("Create user: %s", user.Email))
 }
 
+var (
+    // key must be 16, 24 or 32 bytes long (AES-128, AES-192 or AES-256)
+    key = []byte("super-secret-key")
+    store = sessions.NewCookieStore(key)
+)
+
+func login(w http.ResponseWriter, r *http.Request) {
+    session, _ := store.Get(r, "cookie-name")
+
+    // Decode request
+	user := models.User{}
+	json.NewDecoder(r.Body).Decode(&user)
+
+	// Grab plain text password
+	password := user.Password
+	
+	// Check database for user
+	err := db.
+		Where("Email = ?", user.Email).
+		First(&user).
+		Error
+	if err != nil {
+		var resp = map[string]interface{}{"status": false, "message": "Email address not found"}
+		json.NewEncoder(w).Encode(resp)
+		return
+	}
+
+	// Compare hashed password to plain text password
+	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)) 
+	if err != nil {
+		var resp = map[string]interface{}{"status": false, "message": "Invalid credentials...please try again"}
+		json.NewEncoder(w).Encode(resp)
+		return
+	}
+
+	// Set header and encode as json
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	var resp = map[string]interface{}{"status": false, "message": "User is now logged in"}
+	json.NewEncoder(w).Encode(resp)
+
+    // Set user as authenticated
+    session.Values["authenticated"] = true
+    session.Save(r, w)
+}
+
 func getCategories(w http.ResponseWriter, r *http.Request) {
 	// Query db and return all categories
 	categories := []models.Category{}
@@ -94,7 +142,7 @@ func getCategories(w http.ResponseWriter, r *http.Request) {
 	// Set header and encode as json
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
-	json.NewEncoder(w).Encode(categories)	
+	json.NewEncoder(w).Encode(categories)
 }
 
 func getCategory(w http.ResponseWriter, r *http.Request) {
