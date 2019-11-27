@@ -49,13 +49,18 @@ func main() {
 
 	// Create url routes
 	r := mux.NewRouter()
+
+	// Public routes
 	r.HandleFunc("/signup", createUser).Methods("POST")
 	r.HandleFunc("/login", login).Methods("POST")
 	r.HandleFunc("/categories", getCategories).Methods("GET")
 	r.HandleFunc("/categories/{id}", getCategory).Methods("GET")
-	r.HandleFunc("/categories", addCategory).Methods("POST")
-	r.HandleFunc("/categories/{id}", updateCategory).Methods("PUT")
-	r.HandleFunc("/categories/{id}", deleteCategory).Methods("DELETE")
+	
+	// Auth routes
+	s := r.PathPrefix("/auth").Subrouter()
+	s.HandleFunc("/categories", addCategory).Methods("POST")
+	s.HandleFunc("/categories/{id}", updateCategory).Methods("PUT")
+	s.HandleFunc("/categories/{id}", deleteCategory).Methods("DELETE")
 
 	// Start http server
 	http_port := 8888
