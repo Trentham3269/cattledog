@@ -167,6 +167,14 @@ func getCategory(w http.ResponseWriter, r *http.Request) {
 }
 
 func addCategory(w http.ResponseWriter, r *http.Request) {
+	// Check if user is authenticated
+	session, _ := store.Get(r, "cookie-name")
+
+	if auth, ok := session.Values["authenticated"].(bool); !ok || !auth {
+		http.Error(w, "Forbidden", http.StatusForbidden)
+		return
+	}
+
 	// Decode request and create record in db
 	category := models.Category{}
 	json.NewDecoder(r.Body).Decode(&category)
@@ -177,6 +185,14 @@ func addCategory(w http.ResponseWriter, r *http.Request) {
 }
 
 func updateCategory(w http.ResponseWriter, r *http.Request) {
+	// Check if user is authenticated
+	session, _ := store.Get(r, "cookie-name")
+
+	if auth, ok := session.Values["authenticated"].(bool); !ok || !auth {
+		http.Error(w, "Forbidden", http.StatusForbidden)
+		return
+	}
+
 	// Access url parameter
 	vars := mux.Vars(r)
 
@@ -193,6 +209,14 @@ func updateCategory(w http.ResponseWriter, r *http.Request) {
 }
 
 func deleteCategory(w http.ResponseWriter, r *http.Request) {
+	// Check if user is authenticated
+	session, _ := store.Get(r, "cookie-name")
+
+	if auth, ok := session.Values["authenticated"].(bool); !ok || !auth {
+		http.Error(w, "Forbidden", http.StatusForbidden)
+		return
+	}
+
 	// Access url parameter
 	vars := mux.Vars(r)
 
