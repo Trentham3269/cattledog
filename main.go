@@ -55,9 +55,10 @@ func main() {
 	r.HandleFunc("/login", login).Methods("POST")
 	r.HandleFunc("/categories", getCategories).Methods("GET")
 	r.HandleFunc("/categories/{id}", getCategory).Methods("GET")
-	
+
 	// Auth routes
 	s := r.PathPrefix("/auth").Subrouter()
+	s.Use(sessionMiddleware)
 	s.HandleFunc("/categories", addCategory).Methods("POST")
 	s.HandleFunc("/categories/{id}", updateCategory).Methods("PUT")
 	s.HandleFunc("/categories/{id}", deleteCategory).Methods("DELETE")
@@ -136,6 +137,20 @@ func login(w http.ResponseWriter, r *http.Request) {
     session.Save(r, w)
 }
 
+func sessionMiddleware(next http.Handler) http.Handler {
+  return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+    // Get session cookie
+    session, _ := store.Get(r, "cookie-name")
+
+    // Check if user is authenticated
+    if auth, ok := session.Values["authenticated"].(bool); !ok || !auth {
+        http.Error(w, "Forbidden", http.StatusForbidden)
+        return
+    }
+    next.ServeHTTP(w, r)
+  })
+}
+
 func getCategories(w http.ResponseWriter, r *http.Request) {
 	// Query db and return all categories
 	categories := []models.Category{}
@@ -172,14 +187,6 @@ func getCategory(w http.ResponseWriter, r *http.Request) {
 }
 
 func addCategory(w http.ResponseWriter, r *http.Request) {
-	// Check if user is authenticated
-	session, _ := store.Get(r, "cookie-name")
-
-	if auth, ok := session.Values["authenticated"].(bool); !ok || !auth {
-		http.Error(w, "Forbidden", http.StatusForbidden)
-		return
-	}
-
 	// Decode request and create record in db
 	category := models.Category{}
 	json.NewDecoder(r.Body).Decode(&category)
@@ -190,14 +197,6 @@ func addCategory(w http.ResponseWriter, r *http.Request) {
 }
 
 func updateCategory(w http.ResponseWriter, r *http.Request) {
-	// Check if user is authenticated
-	session, _ := store.Get(r, "cookie-name")
-
-	if auth, ok := session.Values["authenticated"].(bool); !ok || !auth {
-		http.Error(w, "Forbidden", http.StatusForbidden)
-		return
-	}
-
 	// Access url parameter
 	vars := mux.Vars(r)
 
@@ -214,14 +213,6 @@ func updateCategory(w http.ResponseWriter, r *http.Request) {
 }
 
 func deleteCategory(w http.ResponseWriter, r *http.Request) {
-	// Check if user is authenticated
-	session, _ := store.Get(r, "cookie-name")
-
-	if auth, ok := session.Values["authenticated"].(bool); !ok || !auth {
-		http.Error(w, "Forbidden", http.StatusForbidden)
-		return
-	}
-
 	// Access url parameter
 	vars := mux.Vars(r)
 
