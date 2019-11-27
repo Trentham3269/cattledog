@@ -1,4 +1,4 @@
-	package main
+package main
 
 import (
 	"encoding/json"
@@ -37,10 +37,10 @@ func main() {
 
 	// Postgres connection string 
 	pgInfo := fmt.Sprintf("host=%s port=%s user=%s "+
-    "dbname=%s sslmode=disable",
-    pg_host, pg_port, pg_user, pg_dbname)
+		"dbname=%s sslmode=disable",
+		pg_host, pg_port, pg_user, pg_dbname)
 
-    // Connect to database
+	// Connect to database
 	db, err = gorm.Open("postgres", pgInfo)
 	if err != nil {
 		fmt.Println(err)
@@ -53,6 +53,7 @@ func main() {
 	// Public routes
 	r.HandleFunc("/signup", createUser).Methods("POST")
 	r.HandleFunc("/login", login).Methods("POST")
+	r.HandleFunc("/logout", logout).Methods("GET")
 	r.HandleFunc("/categories", getCategories).Methods("GET")
 	r.HandleFunc("/categories/{id}", getCategory).Methods("GET")
 
@@ -91,16 +92,16 @@ func createUser(w http.ResponseWriter, r *http.Request) {
 	log.Println(fmt.Sprintf("Create user: %s", user.Email))
 }
 
+// TODO: use Go's crypto/rand or securecookie.GenerateRandomKey(32) and persist the result
 var (
-    // key must be 16, 24 or 32 bytes long (AES-128, AES-192 or AES-256)
-    key = []byte("super-secret-key")
-    store = sessions.NewCookieStore(key)
+	key = []byte("super-secret-key")
+	store = sessions.NewCookieStore(key)
 )
 
 func login(w http.ResponseWriter, r *http.Request) {
-    session, _ := store.Get(r, "cookie-name")
+	session, _ := store.Get(r, "cookie-name")
 
-    // Decode request
+	// Decode request
 	user := models.User{}
 	json.NewDecoder(r.Body).Decode(&user)
 
@@ -113,7 +114,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 		First(&user).
 		Error
 	if err != nil {
-		var resp = map[string]interface{}{"status": false, "message": "Email address not found"}
+		var resp = map[string]interface{}{"message": "Email address not found"}
 		json.NewEncoder(w).Encode(resp)
 		return
 	}
@@ -121,34 +122,48 @@ func login(w http.ResponseWriter, r *http.Request) {
 	// Compare hashed password to plain text password
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)) 
 	if err != nil {
-		var resp = map[string]interface{}{"status": false, "message": "Invalid credentials...please try again"}
+		var resp = map[string]interface{}{"message": "Invalid credentials...please try again"}
 		json.NewEncoder(w).Encode(resp)
 		return
 	}
 
+	// Set user as authenticated
+	session.Values["authenticated"] = true
+	session.Save(r, w)
+
 	// Set header and encode as json
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
-	var resp = map[string]interface{}{"status": false, "message": "User is now logged in"}
+	var resp = map[string]interface{}{"message": "User is now logged in"}
 	json.NewEncoder(w).Encode(resp)
+}
 
-    // Set user as authenticated
-    session.Values["authenticated"] = true
-    session.Save(r, w)
+func logout(w http.ResponseWriter, r *http.Request) {
+	session, _ := store.Get(r, "cookie-name")
+
+	// Revoke users authentication
+	session.Values["authenticated"] = false
+	session.Save(r, w)
+
+	// Set header and encode as json
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	var resp = map[string]interface{}{"message": "User is now logged out"}
+	json.NewEncoder(w).Encode(resp)
 }
 
 func sessionMiddleware(next http.Handler) http.Handler {
-  return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-    // Get session cookie
-    session, _ := store.Get(r, "cookie-name")
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	// Get session cookie
+	session, _ := store.Get(r, "cookie-name")
 
-    // Check if user is authenticated
-    if auth, ok := session.Values["authenticated"].(bool); !ok || !auth {
-        http.Error(w, "Forbidden", http.StatusForbidden)
-        return
-    }
-    next.ServeHTTP(w, r)
-  })
+	// Check if user is authenticated
+	if auth, ok := session.Values["authenticated"].(bool); !ok || !auth {
+		http.Error(w, "Forbidden", http.StatusForbidden)
+		return
+	}
+	next.ServeHTTP(w, r)
+	})
 }
 
 func getCategories(w http.ResponseWriter, r *http.Request) {
