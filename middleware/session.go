@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/gorilla/sessions"
@@ -15,7 +16,10 @@ var (
 func SessionMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	// Get session cookie
-	session, _ := Store.Get(r, "cookie-name")
+	session, err := Store.Get(r, "cookie-name")
+	if err != nil {
+		log.Println(err)
+	}
 
 	// Check if user is authenticated
 	if auth, ok := session.Values["authenticated"].(bool); !ok || !auth {

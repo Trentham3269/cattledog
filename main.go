@@ -43,7 +43,7 @@ func main() {
 	// Connect to database
 	db, err = gorm.Open("postgres", pgInfo)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 	}
 	defer db.Close()			
 
@@ -80,7 +80,7 @@ func createUser(w http.ResponseWriter, r *http.Request) {
 	// Encrypt password
 	pass, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
-		log.Fatal("Password encryption failed")
+		log.Println("Password encryption failed")
 	}
 
 	// Assign new password
@@ -91,7 +91,10 @@ func createUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func login(w http.ResponseWriter, r *http.Request) {
-	session, _ := middleware.Store.Get(r, "cookie-name")
+	session, err := middleware.Store.Get(r, "cookie-name")
+	if err != nil {
+		log.Println(err)
+	}
 
 	// Decode request
 	user := models.User{}
@@ -101,7 +104,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 	password := user.Password
 	
 	// Check database for user
-	err := db.
+	err = db.
 		Where("Email = ?", user.Email).
 		First(&user).
 		Error
@@ -131,7 +134,10 @@ func login(w http.ResponseWriter, r *http.Request) {
 }
 
 func logout(w http.ResponseWriter, r *http.Request) {
-	session, _ := middleware.Store.Get(r, "cookie-name")
+	session, err := middleware.Store.Get(r, "cookie-name")
+	if err != nil {
+		log.Println(err)
+	}
 
 	// Revoke users authentication
 	session.Values["authenticated"] = false
@@ -148,9 +154,6 @@ func getCategories(w http.ResponseWriter, r *http.Request) {
 	// Query db and return all categories
 	categories := []models.Category{}
 	db.Find(&categories)
-
-	// Log endpoint
-	log.Println("Return all categories")
 
 	// Set header and encode as json
 	w.Header().Set("Content-Type", "application/json")
