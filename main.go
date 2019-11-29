@@ -49,6 +49,7 @@ func main() {
 
 	// Create url routes
 	r := mux.NewRouter()
+	r.Use(middleware.LoggingMiddleware)
 
 	// Public routes
 	r.HandleFunc("/signup", createUser).Methods("POST")
@@ -87,9 +88,6 @@ func createUser(w http.ResponseWriter, r *http.Request) {
 	
 	// Create user in db
 	db.Create(&user)
-
-	// Log user created
-	log.Println(fmt.Sprintf("Create user: %s", user.Email))
 }
 
 func login(w http.ResponseWriter, r *http.Request) {
@@ -172,9 +170,6 @@ func getCategory(w http.ResponseWriter, r *http.Request) {
 		Where("ID = ?", vars["id"]).
 		Find(&category)
 
-	// Log category returned
-	log.Println(fmt.Sprintf("Return category of %s", category.Name))
-
 	// Set header and encode as json
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -186,9 +181,6 @@ func addCategory(w http.ResponseWriter, r *http.Request) {
 	category := models.Category{}
 	json.NewDecoder(r.Body).Decode(&category)
 	db.Create(&category)
-
-	// Log new category
-	log.Println(fmt.Sprintf("Create %s category", category.Name))
 }
 
 func updateCategory(w http.ResponseWriter, r *http.Request) {
@@ -202,9 +194,6 @@ func updateCategory(w http.ResponseWriter, r *http.Request) {
 	// Parse request body
 	json.NewDecoder(r.Body).Decode(&category)
 	db.Save(&category.Name)
-
-	// Log category updated
-	log.Println(fmt.Sprintf("Update category to %s", category.Name))
 }
 
 func deleteCategory(w http.ResponseWriter, r *http.Request) {
@@ -215,7 +204,4 @@ func deleteCategory(w http.ResponseWriter, r *http.Request) {
 	category := models.Category{}
 	db.First(&category, vars["id"])
 	db.Delete(&category)
-
-	// Log category deleted
-	log.Println(fmt.Sprintf("Delete %s category", category.Name))
 }
