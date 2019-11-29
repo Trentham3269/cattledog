@@ -10,6 +10,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
 	"github.com/joho/godotenv"
+	"github.com/Trentham3269/cattledog/config"
 	"github.com/Trentham3269/cattledog/middleware"
 	"github.com/Trentham3269/cattledog/models"
 	"golang.org/x/crypto/bcrypt"
@@ -23,22 +24,12 @@ var db *gorm.DB
 func main() {
 	var err error
 
-	// Load .env file
-	err = godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
-
-	// Assign environment variables
-	pg_host := os.Getenv("HOST")
-	pg_port := os.Getenv("PORT")
-	pg_user := os.Getenv("USERNAME")
-	pg_dbname := os.Getenv("DATABASE")
+	cf := GetConfig()
 
 	// Postgres connection string 
 	pgInfo := fmt.Sprintf("host=%s port=%s user=%s "+
 		"dbname=%s sslmode=disable",
-		pg_host, pg_port, pg_user, pg_dbname)
+		cf.Host, cf.Port, cf.Username, cf.Database)
 
 	// Connect to database
 	db, err = gorm.Open("postgres", pgInfo)
@@ -70,6 +61,26 @@ func main() {
 	http_host := fmt.Sprintf("localhost:%d", http_port)
 	log.Println(fmt.Sprintf("Server listening on %d...", http_port))
 	log.Fatal(http.ListenAndServe(http_host, r))
+}
+
+func GetConfig() config.Config {
+	var err error
+	// Load .env file
+	err = godotenv.Load()
+	if err != nil {
+		log.Fatal(fmt.Println("Could not load .env file"))
+	}
+
+	// Populate config struct
+	cf := config.Config{
+		Host: os.Getenv("HOST"),
+		Port: os.Getenv("PORT"),
+		Username: os.Getenv("USERNAME"),
+		Database: os.Getenv("DATABASE"),
+	}
+
+	// Make struct available to db
+	return cf
 }
 
 func createUser(w http.ResponseWriter, r *http.Request) {
