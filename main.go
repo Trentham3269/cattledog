@@ -137,9 +137,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 	session.Values["authenticated"] = true
 	session.Save(r, w)
 
-	// Set header and encode as json
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
+	// Encode as json
 	var resp = map[string]interface{}{"message": "User is now logged in"}
 	json.NewEncoder(w).Encode(resp)
 }
@@ -154,9 +152,7 @@ func logout(w http.ResponseWriter, r *http.Request) {
 	session.Values["authenticated"] = false
 	session.Save(r, w)
 
-	// Set header and encode as json
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
+	// Encode as json
 	var resp = map[string]interface{}{"message": "User is now logged out"}
 	json.NewEncoder(w).Encode(resp)
 }
@@ -166,9 +162,7 @@ func getCategories(w http.ResponseWriter, r *http.Request) {
 	categories := []models.Category{}
 	db.Find(&categories)
 
-	// Set header and encode as json
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
+	// Encode as json
 	json.NewEncoder(w).Encode(categories)
 }
 
@@ -184,9 +178,7 @@ func getCategory(w http.ResponseWriter, r *http.Request) {
 		Where("ID = ?", vars["id"]).
 		Find(&category)
 
-	// Set header and encode as json
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
+	// Encode as json
 	json.NewEncoder(w).Encode(category)
 }
 
