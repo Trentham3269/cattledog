@@ -50,11 +50,14 @@ func main() {
 	r.HandleFunc("/categories/{id}", getCategory).Methods("GET")
 
 	// Auth routes
-	s := r.PathPrefix("/auth").Subrouter()
-	s.Use(middleware.SessionMiddleware)
-	s.HandleFunc("/categories", addCategory).Methods("POST")
-	s.HandleFunc("/categories/{id}", updateCategory).Methods("PUT")
-	s.HandleFunc("/categories/{id}", deleteCategory).Methods("DELETE")
+	// s := r.PathPrefix("/auth").Subrouter()
+	// s.Use(middleware.SessionMiddleware)
+	r.HandleFunc("/categories", addCategory).Methods("POST", "OPTIONS")
+	r.HandleFunc("/categories/{id}", updateCategory).Methods("PUT")
+	r.HandleFunc("/categories/{id}", deleteCategory).Methods("DELETE")
+
+	// Basic mux CORS middleware
+	r.Use(mux.CORSMethodMiddleware(r))
 
 	// Start http server
 	http_port := 8888
@@ -162,7 +165,8 @@ func getCategories(w http.ResponseWriter, r *http.Request) {
 	categories := []models.Category{}
 	db.Find(&categories)
 
-	// Encode as json
+	// Set header and encode as json
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	json.NewEncoder(w).Encode(categories)
 }
 
@@ -183,6 +187,11 @@ func getCategory(w http.ResponseWriter, r *http.Request) {
 }
 
 func addCategory(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	if r.Method == "OPTIONS" {
+        return
+    }
 	// Decode request and create record in db
 	category := models.Category{}
 	json.NewDecoder(r.Body).Decode(&category)
