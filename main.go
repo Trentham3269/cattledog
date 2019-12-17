@@ -163,7 +163,7 @@ func logout(w http.ResponseWriter, r *http.Request) {
 func getCategories(w http.ResponseWriter, r *http.Request) {
 	// Query db and return all categories
 	categories := []models.Category{}
-	db.Find(&categories)
+	db.Order("id desc").Limit(10).Find(&categories)
 
 	// Set header and encode as json
 	w.Header().Set("Access-Control-Allow-Origin", "*")
