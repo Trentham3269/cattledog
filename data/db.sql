@@ -21,8 +21,8 @@ CREATE TABLE items (
   id SERIAL PRIMARY KEY, 
   title VARCHAR(50) NOT NULL,
   description VARCHAR(250) NOT NULL,
-  cat_id INTEGER REFERENCES categories(id),
-  user_id INTEGER REFERENCES users(id)
+  cat_id INTEGER NOT NULL,
+  user_id INTEGER NOT NULL
 );
 
 INSERT INTO categories (name) VALUES ('Soccer');
@@ -34,9 +34,7 @@ INSERT INTO categories (name) VALUES ('Rock Climbing');
 INSERT INTO categories (name) VALUES ('Football');
 INSERT INTO categories (name) VALUES ('Surfing');
 INSERT INTO categories (name) VALUES ('Hockey');
-
-INSERT INTO users (email, password) VALUES ('testuser_one@gmail.com', 'testuser_one');
-INSERT INTO users (email, password) VALUES ('testuser_two@gmail.com', 'testuser_two');
+INSERT INTO categories (name) VALUES ('Fishing');
 
 INSERT INTO items (title, description, cat_id, user_id) VALUES ('Boots', 'The latest in comfort, style and cost!', 1, 1);
 INSERT INTO items (title, description, cat_id, user_id) VALUES ('Indoor ball', 'As used in the NBA', 2, 1);
