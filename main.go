@@ -28,13 +28,12 @@ func main() {
 
 	// Postgres connection string 
 	pgInfo := fmt.Sprintf("host=%s port=%s user=%s "+
-		"dbname=%s sslmode=disable",
-		cf.Host, cf.Port, cf.Username, cf.Database)
-
+		"dbname=%s password=%s sslmode=disable",
+		cf.Host, cf.Port, cf.Username, cf.Database, cf.Password)
 	// Connect to database
 	db, err = gorm.Open("postgres", pgInfo)
 	if err != nil {
-		log.Println(err)
+		log.Fatalln(err)
 	}
 	defer db.Close()			
 
@@ -77,6 +76,7 @@ func GetConfig() config.Config {
 	// Populate config struct
 	cf := config.Config{
 		Host: os.Getenv("HOST"),
+		Password: os.Getenv("PASSWORD"),
 		Port: os.Getenv("PORT"),
 		Username: os.Getenv("USERNAME"),
 		Database: os.Getenv("DATABASE"),
