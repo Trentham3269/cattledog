@@ -42,8 +42,8 @@ func main() {
 	r.Use(middleware.LoggingMiddleware)
 
 	// Public routes
-	r.HandleFunc("/signup", createUser).Methods("POST")
-	r.HandleFunc("/login", login).Methods("POST")
+	r.HandleFunc("/signup", createUser).Methods("POST", "OPTIONS")
+	r.HandleFunc("/login", login).Methods("POST", "OPTIONS")
 	r.HandleFunc("/logout", logout).Methods("GET")
 	r.HandleFunc("/categories", getCategories).Methods("GET")
 	r.HandleFunc("/categories/{id}", getCategory).Methods("GET")
@@ -52,8 +52,8 @@ func main() {
 	// s := r.PathPrefix("/auth").Subrouter()
 	// s.Use(middleware.SessionMiddleware)
 	r.HandleFunc("/categories", addCategory).Methods("POST", "OPTIONS")
-	r.HandleFunc("/categories/{id}", updateCategory).Methods("PUT")
-	r.HandleFunc("/categories/{id}", deleteCategory).Methods("DELETE")
+	r.HandleFunc("/categories/{id}", updateCategory).Methods("PUT", "OPTIONS")
+	r.HandleFunc("/categories/{id}", deleteCategory).Methods("DELETE", "OPTIONS")
 
 	// Basic mux CORS middleware
 	r.Use(mux.CORSMethodMiddleware(r))
@@ -87,6 +87,12 @@ func GetConfig() config.Config {
 }
 
 func createUser(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	if r.Method == "OPTIONS" {
+		return
+	}
+
 	// Decode request to retrieve password
 	user := models.User{}
 	json.NewDecoder(r.Body).Decode(&user)
@@ -192,6 +198,7 @@ func addCategory(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "OPTIONS" {
         return
     }
+    
 	// Decode request and create record in db
 	category := models.Category{}
 	json.NewDecoder(r.Body).Decode(&category)
