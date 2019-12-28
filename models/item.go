@@ -6,5 +6,5 @@ type Item struct {
 	Description string `gorm:"type:varchar(250)" json:"desc"`
 	CatID       int    `json:"-"`
 	UserID      int    `json:"-"`
-	User        User   `gorm:"foreignkey:UserID" json:"user"`
+	User        User   `gorm:"foreignkey:UserID" json:"-"`
 }
