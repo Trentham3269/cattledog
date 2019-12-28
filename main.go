@@ -183,6 +183,12 @@ func getCategories(w http.ResponseWriter, r *http.Request) {
 }
 
 func getCategory(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	if r.Method == "OPTIONS" {
+		return
+	}
+	
 	// Access url parameter
 	vars := mux.Vars(r)
 
