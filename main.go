@@ -111,6 +111,12 @@ func createUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func login(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	if r.Method == "OPTIONS" {
+		return
+	}
+	
 	session, err := middleware.Store.Get(r, "cookie-name")
 	if err != nil {
 		log.Println(err)
@@ -198,7 +204,7 @@ func addCategory(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "OPTIONS" {
         return
     }
-    
+
 	// Decode request and create record in db
 	category := models.Category{}
 	json.NewDecoder(r.Body).Decode(&category)
