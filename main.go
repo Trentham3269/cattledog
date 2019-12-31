@@ -49,14 +49,11 @@ func main() {
 	r.HandleFunc("/categories/{id}", getCategory).Methods("GET")
 
 	// Auth routes
-	// s := r.PathPrefix("/auth").Subrouter()
-	// s.Use(middleware.SessionMiddleware)
-	r.HandleFunc("/categories", addCategory).Methods("POST", "OPTIONS")
-	r.HandleFunc("/categories/{id}", updateCategory).Methods("PUT", "OPTIONS")
-	r.HandleFunc("/categories/{id}", deleteCategory).Methods("DELETE", "OPTIONS")
-
-	// Basic mux CORS middleware
-	r.Use(mux.CORSMethodMiddleware(r))
+	s := r.PathPrefix("/auth").Subrouter()
+	s.Use(middleware.SessionMiddleware)
+	s.HandleFunc("/categories", addCategory).Methods("POST", "OPTIONS")
+	s.HandleFunc("/categories/{id}", updateCategory).Methods("PUT", "OPTIONS")
+	s.HandleFunc("/categories/{id}", deleteCategory).Methods("DELETE", "OPTIONS")
 
 	// Start http server
 	http_port := 8888
@@ -153,7 +150,8 @@ func login(w http.ResponseWriter, r *http.Request) {
 	session.Save(r, w)
 
 	// Encode as json
-	var resp = map[string]interface{}{"message": "User is now logged in"}
+	username := user.Email
+	var resp = map[string]interface{}{"message": "Welcome "  + username + "!"}
 	json.NewEncoder(w).Encode(resp)
 }
 
