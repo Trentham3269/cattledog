@@ -107,13 +107,7 @@ func createUser(w http.ResponseWriter, r *http.Request) {
 	db.Create(&user)
 }
 
-func login(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
-	if r.Method == "OPTIONS" {
-		return
-	}
-	
+func login(w http.ResponseWriter, r *http.Request) {	
 	session, err := middleware.Store.Get(r, "cookie-name")
 	if err != nil {
 		log.Println(err)
@@ -175,18 +169,11 @@ func getCategories(w http.ResponseWriter, r *http.Request) {
 	categories := []models.Category{}
 	db.Order("id desc").Limit(10).Find(&categories)
 
-	// Set header and encode as json
-	w.Header().Set("Access-Control-Allow-Origin", "*")
+	// Encode as json
 	json.NewEncoder(w).Encode(categories)
 }
 
 func getCategory(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
-	if r.Method == "OPTIONS" {
-		return
-	}
-	
 	// Access url parameter
 	vars := mux.Vars(r)
 
@@ -203,12 +190,6 @@ func getCategory(w http.ResponseWriter, r *http.Request) {
 }
 
 func addCategory(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
-	if r.Method == "OPTIONS" {
-        return
-    }
-
 	// Decode request and create record in db
 	category := models.Category{}
 	json.NewDecoder(r.Body).Decode(&category)
