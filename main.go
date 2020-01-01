@@ -145,7 +145,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 
 	// Encode as json
 	username := user.Email
-	var resp = map[string]interface{}{"message": "Welcome "  + username + "!"}
+	var resp = map[string]interface{}{"message": username}
 	json.NewEncoder(w).Encode(resp)
 }
 
