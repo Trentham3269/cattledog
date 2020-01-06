@@ -239,7 +239,7 @@ func addItem(w http.ResponseWriter, r *http.Request) {
 		Category    string
 		Title       string
 		Description string
-		User        string
+		UserID        string
 	}
 	
 	payload := Payload{}
@@ -253,12 +253,11 @@ func addItem(w http.ResponseWriter, r *http.Request) {
 	id := category.ID
 
 	// Assign data to the item struct and create record in db
-	item := models.Item {
+	item := models.Item{
 		Title:       payload.Title,       
 		Description: payload.Description,
-		CatID:       id, 
+		CatID:       id,
+		UserID:      1, //TODO: get user_id from session
 	}
-	fmt.Println(&item)
-
-	//db.Debug().Create(&item)
+	db.Create(&item)
 }
