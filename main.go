@@ -47,6 +47,8 @@ func main() {
 	r.HandleFunc("/logout", logout).Methods("GET")
 	r.HandleFunc("/categories", getCategories).Methods("GET")
 	r.HandleFunc("/categories/{id}", getCategory).Methods("GET")
+	r.HandleFunc("/items", getItems).Methods("GET")
+	//r.HandleFunc("/items/{id}", getItem).Methods("GET")
 
 	// Auth routes
 	s := r.PathPrefix("/auth").Subrouter()
@@ -54,6 +56,9 @@ func main() {
 	s.HandleFunc("/categories", addCategory).Methods("POST", "OPTIONS")
 	s.HandleFunc("/categories/{id}", updateCategory).Methods("PUT", "OPTIONS")
 	s.HandleFunc("/categories/{id}", deleteCategory).Methods("DELETE", "OPTIONS")
+	s.HandleFunc("/items", addItem).Methods("POST", "OPTIONS")
+	//s.HandleFunc("/items/{id}", updateItem).Methods("PUT", "OPTIONS")
+	//s.HandleFunc("/items/{id}", deleteItem).Methods("DELETE", "OPTIONS")
 
 	// Start http server
 	http_port := 8888
@@ -165,7 +170,7 @@ func logout(w http.ResponseWriter, r *http.Request) {
 }
 
 func getCategories(w http.ResponseWriter, r *http.Request) {
-	// Query db and return all categories
+	// Query db and return latest categories
 	categories := []models.Category{}
 	db.Order("id desc").Limit(10).Find(&categories)
 
@@ -187,6 +192,15 @@ func getCategory(w http.ResponseWriter, r *http.Request) {
 
 	// Encode as json
 	json.NewEncoder(w).Encode(category)
+}
+
+func getItems(w http.ResponseWriter, r *http.Request) {
+	// Query db and return latest items
+	items := []models.Item{}
+	db.Order("id desc").Limit(10).Find(&items)
+
+	// Encode as json
+	json.NewEncoder(w).Encode(items)
 }
 
 func addCategory(w http.ResponseWriter, r *http.Request) {
@@ -217,4 +231,34 @@ func deleteCategory(w http.ResponseWriter, r *http.Request) {
 	category := models.Category{}
 	db.First(&category, vars["id"])
 	db.Delete(&category)
+}
+
+func addItem(w http.ResponseWriter, r *http.Request) {
+	// Create payload struct and decode data
+	type Payload struct {
+		Category    string
+		Title       string
+		Description string
+		User        string
+	}
+	
+	payload := Payload{}
+	json.NewDecoder(r.Body).Decode(&payload)
+
+	// Query db to find the category id
+	category := models.Category{}
+	db. 
+	 	Where("Name = ?", payload.Category).
+	 	Find(&category)
+	id := category.ID
+
+	// Assign data to the item struct and create record in db
+	item := models.Item {
+		Title:       payload.Title,       
+		Description: payload.Description,
+		CatID:       id, 
+	}
+	fmt.Println(&item)
+
+	//db.Debug().Create(&item)
 }
