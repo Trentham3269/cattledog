@@ -230,28 +230,21 @@ func deleteCategory(w http.ResponseWriter, r *http.Request) {
 func addItem(w http.ResponseWriter, r *http.Request) {
 	// Create payload struct and decode data
 	type Payload struct {
-		Category    string
 		Title       string
 		Description string
-		UserID      string
+		CatID       int
 	}
-	
 	payload := Payload{}
 	json.NewDecoder(r.Body).Decode(&payload)
-
-	// Query db to find the category id
-	category := models.Category{}
-	db. 
-	 	Where("Name = ?", payload.Category).
-	 	Find(&category)
-	id := category.ID
 
 	// Assign data to the item struct and create record in db
 	item := models.Item{
 		Title:       payload.Title,       
 		Description: payload.Description,
-		CatID:       id,
+		CatID:       payload.CatID,
 		UserID:      1, //TODO: get user_id from session
 	}
 	db.Create(&item)
 }
+
+// TODO: Check session details method from proton 
