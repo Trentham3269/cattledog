@@ -166,7 +166,7 @@ func logout(w http.ResponseWriter, r *http.Request) {
 func getCategories(w http.ResponseWriter, r *http.Request) {
 	// Query db and return latest categories
 	categories := []models.Category{}
-	db.Order("id desc").Limit(10).Find(&categories)
+	db.Order("name asc").Find(&categories)
 
 	// Encode as json
 	json.NewEncoder(w).Encode(categories)
