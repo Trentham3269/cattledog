@@ -21,8 +21,10 @@ func SessionMiddleware(next http.Handler) http.Handler {
 			log.Println(err)
 		}
 
+		val := session.Values["authenticated"]
+
 		// Check if user is authenticated
-		if auth, ok := session.Values["authenticated"].(bool); !ok || !auth {
+		if auth, ok := val.(bool); !ok || !auth {
 			http.Error(w, "Forbidden", http.StatusForbidden)
 			return
 		}
