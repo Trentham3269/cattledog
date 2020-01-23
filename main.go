@@ -140,6 +140,8 @@ func login(w http.ResponseWriter, r *http.Request) {
 
 	// Set user as authenticated
 	session.Values["authenticated"] = true
+	session.Values["loggedUser"] = user.Email
+	session.Values["loggedId"] = user.ID 
 	session.Save(r, w)
 
 	// Encode as json
@@ -155,7 +157,9 @@ func logout(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Revoke users authentication
-	session.Values["authenticated"] = false
+	delete(session.Values, "authenticated")
+	delete(session.Values, "loggedUser")
+	delete(session.Values, "loggedId")
 	session.Save(r, w)
 
 	// Encode as json
@@ -228,6 +232,15 @@ func deleteCategory(w http.ResponseWriter, r *http.Request) {
 }
 
 func addItem(w http.ResponseWriter, r *http.Request) {
+	session, err := middleware.Store.Get(r, "cookie-name")
+	if err != nil {
+		log.Println(err)
+	}
+
+	// Retrieve our session 
+	val := session.Values["loggedId"]
+    id := val.(int) //TODO: type-assertion
+
 	// Create payload struct and decode data
 	type Payload struct {
 		Title       string
@@ -242,9 +255,7 @@ func addItem(w http.ResponseWriter, r *http.Request) {
 		Title:       payload.Title,       
 		Description: payload.Description,
 		CatID:       payload.CatID,
-		UserID:      1, //TODO: get user_id from session
+		UserID:      id,
 	}
 	db.Create(&item)
 }
-
-// TODO: Check session details method from proton 
